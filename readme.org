@@ -7,7 +7,7 @@ and jai version beta 0.2.017.
 This has no relation to osor_io's Vulkan jai binding, [[https://github.com/osor-io/osor_vulkan][osor_vulkan]].
 
 The primary reason for me to write this binding is because the above
-binding does not compiler anymore.
+binding does not compile anymore.
 
 * Usage
 Obtain a vk.xml. I recommend to get it from your installation of
