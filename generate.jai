@@ -952,7 +952,17 @@ output_function_params :: (params: []VK_Function_Param, sb: *String_Builder) {
             n -= 1;
         }
 
-        append(sb, param.array_prefix);
+        if param.array_prefix.count > 0 {
+            append(sb, "/* ");
+            append(sb, param.array_prefix);
+            append(sb, " */");
+            // In Jai, we cannot pass fixed-size array arguments to
+            // function. Treat it as a pointer instead. However, in
+            // some rare case that the function accept 2D array, I am
+            // fucked. I have yet to see such a thing in vk.xml til
+            // now, 2025 Sep 4, drshapeless
+            append(sb, "*");
+        }
         append(sb, param.type);
     }
 }
