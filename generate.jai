@@ -1147,6 +1147,7 @@ output_dynamic_functions :: () {
         append(*sb, f.name);
         append(*sb, " :: ");
         if f.alias.count > 0 {
+            append(*sb, "PFN_");
             append(*sb, f.alias);
             append(*sb, ";\n");
         } else {
