@@ -245,16 +245,20 @@ handle_handle :: (node: Node) {
 //
 // In 2025 Aug 29, there is only 11 funcpointers.
 handle_funcpointer :: (node: Node) {
-    using vk_funcptr : VK_Function_Pointer;
+    fp : VK_Function_Pointer;
 
     return_type_node := node.children[0];
     ss := split(return_type_node.raw_string, " ");
-    return_type = ss[1];
+    fp.return_type = ss[1];
+    fp.number_of_pointer = count_pointer(fp.return_type, false);
+    if fp.number_of_pointer > 0 {
+        fp.return_type = trim_right(fp.return_type, "*");
+    }
 
     name_node, name_index := find_node_of_tag_name(node, "name");
     assert(name_index >= 0, "funcpointer error: %", node.raw_string);
 
-    name = name_node.inner_string;
+    fp.name = name_node.inner_string;
 
     index := name_index + 1;
     while index < node.children.count {
@@ -267,15 +271,15 @@ handle_funcpointer :: (node: Node) {
         param.type = type_node.inner_string;
         param_node := node.children[type_index + 1];
         param.name = param_node.raw_string;
-        number_of_pointer = count_pointer(param.name);
+        param.number_of_pointer = count_pointer(param.name);
         param.name = clean_parameter_name(param.name);
 
-        array_add(*params, param);
+        array_add(*fp.params, param);
 
         index = type_index + 2;
     }
 
-    array_add(*vk_function_pointers, vk_funcptr);
+    array_add(*vk_function_pointers, fp);
 }
 
 handle_struct :: (node: Node) {
