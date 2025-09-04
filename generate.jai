@@ -602,13 +602,17 @@ handle_extensions :: (parent: Node) {
                     cons.name = name;
                     if alias.count > 0 {
                         cons.value = alias;
-                    } else {
+                    } else if value.count > 0 {
                         v, ok := remove_left(value, "&quot;");
                         if ok {
                             cons.value = sprint("\"%\"", remove_right(v, "&quot;"));
                         } else {
                             cons.value = value;
                         }
+                    } else {
+                        // This would be a dump enum that only states
+                        // its name, useless.
+                        continue;
                     }
                     array_add(*vk_constants, cons);
                 }
