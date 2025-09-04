@@ -836,7 +836,16 @@ output_types :: () {
 
 output_structure_member :: (member: VK_Structure_Member, sb: *String_Builder) {
     append(sb, "    ");
-    append(sb, member.name);
+    // For whatever reason, the struct VkScreenSurfaceCreateInfoQNX
+    // decide to use context as its member's name, which collide with
+    // Jai keyword...
+    //
+    // Hard code to prevent it.
+    output_member_name := member.name;
+    if member.name == "context" {
+        output_member_name = "ctx";
+    }
+    append(sb, output_member_name);
     append(sb, ": ");
     n := member.number_of_pointer;
 
