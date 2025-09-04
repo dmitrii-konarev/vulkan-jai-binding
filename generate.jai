@@ -1036,7 +1036,16 @@ output_enums :: () {
                 append(*sb, e.type);
                 append(*sb, " {\n");
             } else {
-                if e.name == "VkResult" {
+                // Check if any member of this enum has a negative value
+                has_negative := false;
+                for m : e.members {
+                    if begins_with(m.value, "-") {
+                        has_negative = true;
+                        break;
+                    }
+                }
+
+                if has_negative {
                     append(*sb, "enum s32 {\n");
                 } else {
                     append(*sb, "enum u32 {\n");
