@@ -201,6 +201,14 @@ handle_bitmask :: (node: Node) {
         assert(name.count > 0);
         assert(alias.count > 0);
     } else {
+        requires := get_attr(node, "requires");
+        if contains(requires, "FlagBits") {
+            return;
+        }
+        bitvalues := get_attr(node, "bitvalues");
+        if contains(bitvalues, "FlagBits") {
+            return;
+        }
         for child : node.children {
             if child.type == .NODE {
                 if child.tag_name == {
@@ -356,7 +364,7 @@ handle_struct :: (node: Node) {
                         if begins_with(s, "[") && ends_with(s, "]") {
                             vk_member.array_prefix = s;
                         } else if begins_with(s, "*") {
-                            vk_member.number_of_pointer = count_pointer(s);
+                            vk_member.number_of_pointer = count_pointer(s, false);
                         } else if contains(s, ":") {
                             // I hate Nvidia for making things
                             // complicated by introducing bitfield.
@@ -800,14 +808,6 @@ output_types :: () {
             append(*sb, name);
             append(*sb, "_T;\n");
         } else {
-            // We have to deal with FlagBits
-            //
-            // If a Flags is found, as long as it is not a alias, we
-            // don't output it.
-            if contains(name, "Flags") && alias.count == 0 {
-                continue;
-            }
-
             append(*sb, name);
             append(*sb, " :: ");
             if alias.count > 0 {
@@ -1018,6 +1018,11 @@ output_enums :: () {
     sb: String_Builder;
 
     for e : vk_enums {
+        // If it is a empty enum, it is a vendor opaque enum, let the
+        // type deal with it.
+        if e.members.count == 0 {
+            continue;
+        }
         if e.alias.count > 0 {
             append(*sb, e.name);
             append(*sb, " :: ");
@@ -1026,6 +1031,12 @@ output_enums :: () {
         } else {
             if e.is_enum_flags {
                 new_name := replace(e.name, "FlagBits", "Flags");
+                // Alias FlagBits to Flags for compatibility
+                append(*sb, e.name);
+                append(*sb, " :: ");
+                append(*sb, new_name);
+                append(*sb, ";\n");
+
                 append(*sb, new_name);
                 append(*sb, " :: ");
                 append(*sb, "enum_flags ");
