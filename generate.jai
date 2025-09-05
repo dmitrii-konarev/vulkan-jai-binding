@@ -436,6 +436,12 @@ handle_enum :: (node: Node, is_bitmask: bool) {
 
     e.name = get_attr(node, "name");
     assert(e.name.count > 0);
+    e.alias = get_attr(node, "alias");
+    if e.alias.count > 0 {
+        array_add(*vk_enums, e);
+        return;
+    }
+
     e.is_enum_flags = is_bitmask;
 
     if is_bitmask {
