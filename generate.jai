@@ -23,6 +23,7 @@ vk_functions         : [..]VK_Function;
 vk_function_pointers : [..]VK_Function_Pointer;
 vk_enums             : [..]VK_Enum;
 vk_constants         : [..]VK_Constant;
+vk_unions            : [..]VK_Union;
 
 vk_vendors : [..]string;
 
@@ -43,6 +44,7 @@ generate :: () {
     output_structures();
     output_function_pointers();
     output_enums();
+    output_unions();
     output_constants();
     if DYNAMIC_LOADER {
         output_dynamic_functions();
@@ -122,6 +124,17 @@ VK_Constant :: struct {
     value : string;
 }
 
+VK_Union_Member :: struct {
+    name              : string;
+    number_of_pointer : int;
+    type              : string;
+}
+
+VK_Union :: struct {
+    name    : string;
+    members : [..]VK_Union_Member;
+}
+
 generation_loop :: (root_node: Node) {
     for root_child : root_node.children {
         if root_child.tag_name == {
@@ -164,6 +177,8 @@ handle_types :: (parent: Node) {
             handle_funcpointer(type_node);
         case "struct";
             handle_struct(type_node);
+        case "union";
+            handle_union(type_node);
         }
     }
 }
@@ -347,6 +362,41 @@ handle_struct :: (node: Node) {
     }
 
     array_add(*vk_structures, vk_struct);
+}
+
+handle_union :: (parent: Node) {
+    u : VK_Union;
+    u.name = get_attr(parent, "name");
+    assert(u.name.count > 0);
+    for member_node : parent.children {
+        assert(member_node.tag_name == "member");
+        m : VK_Union_Member;
+        for member_child : member_node.children {
+            if member_child.type == .NODE {
+                if member_child.tag_name == {
+                case "type";
+                    m.type = convert_type(member_child.inner_string);
+                case "name";
+
+                    // The name of a union member is often collide
+                    // with build in Jai type, add a underline after
+                    // it
+                    if is_digit(member_child.inner_string[member_child.inner_string.count - 1]) {
+                        m.name = sprint("%_", member_child.inner_string);
+                    } else {
+                        m.name = member_child.inner_string;
+                    }
+                }
+            } else {
+                if begins_with(member_child.raw_string, "*") {
+                    m.number_of_pointer = count_pointer(member_child.raw_string);
+                }
+            }
+        }
+        array_add(*u.members, m);
+    }
+
+    array_add(*vk_unions, u);
 }
 
 handle_enums :: (parent: Node) {
@@ -1104,6 +1154,26 @@ output_enums :: () {
     write_entire_file("enums.jai", *sb);
 }
 
+output_unions :: () {
+    sb: String_Builder;
+    for u : vk_unions {
+        append(*sb, u.name);
+        append(*sb, " :: union {\n");
+        for m : u.members {
+            append(*sb, "    ");
+            append(*sb, m.name);
+            append(*sb, ": ");
+            repeat_string("*", m.number_of_pointer, *sb);
+            append(*sb, m.type);
+            append(*sb, ";\n");
+
+        }
+        append(*sb, "}\n");
+    }
+
+    write_entire_file("unions.jai", *sb);
+}
+
 output_constants :: () {
     sb: String_Builder;
 
@@ -1435,6 +1505,7 @@ VkDeviceAddress :: u64;
 #load "types.jai";
 #load "structures.jai";
 #load "enums.jai";
+#load "unions.jai";
 #load "function_pointers.jai";
 DONE
 
