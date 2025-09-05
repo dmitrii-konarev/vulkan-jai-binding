@@ -1035,22 +1035,28 @@ output_enums :: () {
                 }
             }
 
-            // This modify the member name so we don't have to call
-            // strip_enum_member_name() twice. Resulting in a 0.1s
-            // drop in execution time. Maybe I should add one more
-            // field to VK_Enum_Member to store instead of directly
-            // modify the name.
+            // Here we create a new array of members, because in some
+            // case after stripping the member name, the name will
+            // collide.
+            members : [..]VK_Enum_Member;
             align_pos := 0;
-            for *m : e.members {
+            for m : e.members {
+                new_m := m;
+
                 if m.name.count > 0 {
-                    m.name = strip_enum_member_name(m.name, e.name, e.is_enum_flags);
-                    if m.name.count > align_pos {
-                        align_pos = m.name.count;
+                    new_m.name = strip_enum_member_name(m.name, e.name, e.is_enum_flags);
+
+                    if new_m.name.count > align_pos {
+                        align_pos = new_m.name.count;
                     }
+                } else {
+                    new_m = m;
                 }
+
+                add_enum_member_if_unique(*members, new_m);
             }
 
-            for m : e.members {
+            for m : members {
                 if m.name.count > 0 {
                     append(*sb, "    ");
                     append(*sb, m.name);
