@@ -179,6 +179,8 @@ handle_types :: (parent: Node) {
             handle_struct(type_node);
         case "union";
             handle_union(type_node);
+        case "enum";
+            handle_type_enum(type_node);
         }
     }
 }
@@ -399,6 +401,21 @@ handle_union :: (parent: Node) {
     array_add(*vk_unions, u);
 }
 
+// Why the fuck there is enum in type, we just need to process the
+// alias
+handle_type_enum :: (parent: Node) {
+    alias := get_attr(parent, "alias");
+    name := get_attr(parent, "name");
+
+    if alias.count > 0 {
+        t : VK_Type;
+        t.name = name;
+        t.alias = alias;
+
+        array_add(*vk_types, t);
+    }
+}
+
 handle_enums :: (parent: Node) {
     type := get_attr(parent, "type");
     if type == {
@@ -436,12 +453,6 @@ handle_enum :: (node: Node, is_bitmask: bool) {
 
     e.name = get_attr(node, "name");
     assert(e.name.count > 0);
-    e.alias = get_attr(node, "alias");
-    if e.alias.count > 0 {
-        array_add(*vk_enums, e);
-        return;
-    }
-
     e.is_enum_flags = is_bitmask;
 
     if is_bitmask {
@@ -689,9 +700,9 @@ find_vk_enum :: (name: string) -> index:int {
 handle_feature :: (parent: Node) {
     feature_name := get_attr(parent, "name");
 
-    if feature_name == "VK_VERSION_1_0" {
-        return;
-    }
+    // if feature_name == "VK_VERSION_1_0" {
+    //     return;
+    // }
 
     for require_node : parent.children {
         if require_node.tag_name != "require" {
@@ -1501,11 +1512,14 @@ VK_API_VERSION_MAJOR   :: (version: u32) -> u32 { return (version >> 22) & 0x3ff
 VK_API_VERSION_MINOR   :: (version: u32) -> u32 { return (version >> 12) & 0x3ff; }
 VK_API_VERSION_PATCH   :: (version: u32) -> u32 { return version & 0xfff; }
 
-VkBool32        :: u32;
-VkFlags         :: u32;
-VkFlags64       :: u64;
-VkDeviceSize    :: u64;
-VkDeviceAddress :: u64;
+// Some basetype I don't bother to process.
+VkRemoteAddressNV :: *void;
+VkSampleMask      :: u32;
+VkBool32          :: u32;
+VkFlags           :: u32;
+VkFlags64         :: u64;
+VkDeviceSize      :: u64;
+VkDeviceAddress   :: u64;
 
 #load "constants.jai";
 #load "types.jai";
