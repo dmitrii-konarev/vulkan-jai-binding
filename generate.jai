@@ -539,10 +539,6 @@ handle_extensions :: (parent: Node) {
                 continue;
             }
 
-            if is_vulkansc(require_node) {
-                continue;
-            }
-
             for member_node : require_node.children {
                 if member_node.tag_name != "enum" {
                     continue;
@@ -635,9 +631,9 @@ find_vk_enum :: (name: string) -> index:int {
 }
 
 handle_feature :: (parent: Node) {
-    feature_number := get_attr(parent, "number");
+    feature_name := get_attr(parent, "name");
 
-    if feature_number == "1.0" || is_vulkansc(parent) {
+    if feature_name == "VK_VERSION_1_0" {
         return;
     }
 
