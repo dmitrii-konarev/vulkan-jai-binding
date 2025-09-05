@@ -814,10 +814,10 @@ output_types :: () {
             append(*sb, name);
             append(*sb, "_T;\n");
         } else {
+            // Another check to make sure Flags does not declare twice.
             if contains(name, "Flags") {
                 for flag : outputted_flags {
                     if name == flag {
-                        log("% is already outputted, the type is %", name, type);
                         continue t;
                     }
                 }
