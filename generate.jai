@@ -800,6 +800,14 @@ output_types :: () {
             append(*sb, name);
             append(*sb, "_T;\n");
         } else {
+            // We have to deal with FlagBits
+            //
+            // If a Flags is found, as long as it is not a alias, we
+            // don't output it.
+            if contains(name, "Flags") && alias.count == 0 {
+                continue;
+            }
+
             append(*sb, name);
             append(*sb, " :: ");
             if alias.count > 0 {
@@ -1010,17 +1018,22 @@ output_enums :: () {
     sb: String_Builder;
 
     for e : vk_enums {
-        append(*sb, e.name);
-        append(*sb, " :: ");
         if e.alias.count > 0 {
+            append(*sb, e.name);
+            append(*sb, " :: ");
             append(*sb, e.alias);
             append(*sb, ";\n\n");
         } else {
             if e.is_enum_flags {
+                new_name := replace(e.name, "FlagBits", "Flags");
+                append(*sb, new_name);
+                append(*sb, " :: ");
                 append(*sb, "enum_flags ");
                 append(*sb, e.type);
                 append(*sb, " {\n");
             } else {
+                append(*sb, e.name);
+                append(*sb, " :: ");
                 // Check if any member of this enum has a negative value
                 has_negative := false;
                 for m : e.members {
