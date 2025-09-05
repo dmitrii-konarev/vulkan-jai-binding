@@ -268,7 +268,7 @@ handle_funcpointer :: (node: Node) {
             break;
         }
 
-        param.type = type_node.inner_string;
+        param.type = convert_type(type_node.inner_string);
         param_node := node.children[type_index + 1];
         param.name = param_node.raw_string;
         param.number_of_pointer = count_pointer(param.name);
