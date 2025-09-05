@@ -1425,10 +1425,16 @@ VK_API_VERSION_MAJOR   :: (version: u32) -> u32 { return (version >> 22) & 0x3ff
 VK_API_VERSION_MINOR   :: (version: u32) -> u32 { return (version >> 12) & 0x3ff; }
 VK_API_VERSION_PATCH   :: (version: u32) -> u32 { return version & 0xfff; }
 
+VkBool32        :: u32;
+VkFlags         :: u32;
+VkFlags64       :: u64;
+VkDeviceSize    :: u64;
+VkDeviceAddress :: u64;
+
 #load "constants.jai";
+#load "types.jai";
 #load "structures.jai";
 #load "enums.jai";
-#load "types.jai";
 #load "function_pointers.jai";
 DONE
 
@@ -1441,8 +1447,66 @@ MODULE_NON_DYNAMIC_STRING :: #string DONE
 #load "functions.jai";
 DONE
 
+MODULE_EXTERNAL_TYPE :: #string DONE
+// These are some external type that I don't bother to generate
+xcb_visualid_t      :: u32;
+xcb_window_t        :: u32;
+zx_handle_t         :: u32;
+GgpFrameToken       :: u64;
+GgpStreamDescriptor :: u64;
+
+XID      :: u64;
+Window   :: XID;
+Display  :: struct {};
+RROutput :: XID;
+VisualID :: XID;
+
+// Opaque structs
+wl_surface         :: struct {}; // Opaque struct defined by Wayland
+wl_display         :: struct {}; // Opaque struct defined by Wayland
+xcb_connection_t   :: struct {}; // Opaque struct defined by xcb
+
+_screen_window     :: struct {}; // QNX
+_screen_context    :: struct {}; // QNX
+_screen_buffer     :: struct {}; // QNX
+AHardwareBuffer    :: struct {}; // Android
+ANativeWindow      :: struct {}; // Android
+CAMetalLayer       :: struct {}; // Apple
+IOSurfaceRef       :: struct {}; // Opaque struct defined by Apple’s CoreGraphics framework
+IDirectFB          :: struct {}; // FB
+IDirectFBSurface   :: struct {}; // FB
+OHNativeWindow     :: struct {};
+MTLBuffer_id       :: *void;
+MTLCommandQueue_id :: *void;
+MTLDevice_id       :: *void;
+MTLTexture_id      :: *void;
+MTLSharedEvent_id  :: *void;
+NvSciSyncAttrList  :: *void;
+NvSciSyncObj       :: *void;
+NvSciSyncFence     :: *void;
+NvSciBufAttrList   :: *void;
+NvSciBufObj        :: *void;
+
+// Windows shit, if you are using win32, fix it yourself.
+HINSTANCE           :: *void;
+HWND                :: *void;
+HMONITOR            :: *void;
+HANDLE              :: *void;
+LPCWSTR             :: *u16;
+SECURITY_ATTRIBUTES :: struct {};
+DWORD               :: u32;
+LONG                :: s64;
+LUID :: struct {
+    LowPart:  DWORD;
+    HighPart: LONG;
+}
+
+DONE
+
 output_module :: () {
     sb: String_Builder;
+
+    append(*sb, MODULE_EXTERNAL_TYPE);
 
     append(*sb, MODULE_COMMON_STRING);
 
