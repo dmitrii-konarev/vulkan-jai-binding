@@ -48,12 +48,25 @@ Video_Struct_Member :: struct {
 }
 
 Video_Struct :: struct {
-    name: string;
+    name    : string;
+    members : [..]Video_Struct_Member;
+}
 
+Video_Enum_Member :: struct {
+    name    : string;
+    alias   : string;
+    value   : string;
+    comment : string;
+}
+
+Video_Enum :: struct {
+    name    : string;
+    members : [..]Video_Enum_Member;
 }
 
 video_constants : [..]Video_Constant;
 video_structs   : [..]Video_Struct;
+video_enums     : [..]Video_Enum;
 
 
 loop :: (root_node: Node) {
@@ -61,6 +74,10 @@ loop :: (root_node: Node) {
         if root_child.tag_name == {
         case "types";
             handle_types(root_child);
+        case "enums";
+            handle_enums(root_child);
+        case "extensions";
+            handle_extensions(root_child);
         }
     }
 }
@@ -69,6 +86,8 @@ output :: () {
     sb: String_Builder;
     append(*sb, VIDEO_OUTPUT_COMMON);
     output_constants(*sb);
+    output_structs(*sb);
+    output_enums(*sb);
 
     write_entire_file("video.jai", *sb);
 }
@@ -111,6 +130,8 @@ handle_type_define :: (parent: Node) {
 
 handle_struct :: (parent: Node) {
     s : Video_Struct;
+    s.name = get_attr(parent, "name");
+    assert(s.name.count > 0);
 
     for member_node : parent.children {
         m : Video_Struct_Member;
@@ -134,6 +155,7 @@ handle_struct :: (parent: Node) {
                     if begins_with(s, ":") {
                         s = remove_left(s, ":");
                         s = trim(s);
+                        ok := false;
                         m.bitmask, ok = string_to_int(s);
                         assert(ok);
                     } else if begins_with(s, "[") && ends_with(s, "]") {
@@ -146,9 +168,55 @@ handle_struct :: (parent: Node) {
         case "comment";
             m.comment = member_node.inner_string;
         }
+        array_add(*s.members, m);
     }
 
     array_add(*video_structs, s);
+}
+
+handle_enums :: (parent: Node) {
+    // Seems like video.xml enums only have value, which means no enum_flags.
+    e : Video_Enum;
+    e.name = get_attr(parent, "name");
+    assert(e.name.count > 0);
+
+    for member_node : parent.children {
+        m : Video_Enum_Member;
+        if member_node.tag_name ==  {
+        case "enum";
+            m.name = get_attr(member_node, "name");
+            m.value = get_attr(member_node, "value");
+            m.comment = get_attr(member_node, "comment");
+            m.alias = get_attr(member_node, "alias");
+        case "comment";
+            m.comment = member_node.inner_string;
+        }
+        array_add(*e.members, m);
+    }
+
+
+    array_add(*video_enums, e);
+}
+
+handle_extensions :: (parent: Node) {
+    for extension_node : parent.children {
+        assert(extension_node.tag_name == "extension");
+        for require_node : extension_node.children {
+            assert(require_node.tag_name == "require");
+            for member : require_node.children {
+                if member.tag_name == "enum" {
+                    c : Video_Constant;
+                    c.name = get_attr(member, "name");
+                    assert(c.name.count > 0);
+
+                    c.value = get_attr(member, "value");
+                    assert(c.value.count > 0);
+
+                    array_add(*video_constants, c);
+                }
+            }
+        }
+    }
 }
 
 output_constants :: (sb: *String_Builder) {
@@ -162,8 +230,138 @@ output_constants :: (sb: *String_Builder) {
             append(sb, " :: ");
         }
 
-        append(sb, c.value);
+
+        value, found := remove_left(c.value, "&quot;");
+        if found {
+            value = remove_right(value, "&quot;");
+            append(sb, "\"");
+            append(sb, value);
+            append(sb, "\"");
+        } else {
+            append(sb, c.value);
+        }
+
         append(sb, ";\n");
+    }
+}
+
+output_struct_member :: (member: Video_Struct_Member, sb: *String_Builder) {
+    if member.name.count > 0 {
+        append(sb, "    ");
+        append(sb, member.name);
+        append(sb, ": ");
+        repeat_string("*", member.number_of_pointer, sb);
+        append(sb, member.array_prefix);
+        append(sb, member.type);
+        append(sb, ";");
+        if member.comment.count > 0 {
+            append(sb, " /* ");
+            append(sb, member.comment);
+            append(sb, " */");
+        }
+    } else {
+        if member.comment.count > 0 {
+            append(sb, "/*\n");
+            append(sb, member.comment);
+            append(sb, "\n*/");
+        }
+    }
+    if member.bitmask > 0 {
+        append(sb, sprint(" /* % bits */", member.bitmask));
+    }
+
+    append(sb, "\n");
+}
+
+output_structs :: (sb: *String_Builder) {
+    for s : video_structs {
+        append(sb, s.name);
+        append(sb, " :: struct {\n");
+        bitmask_target  := 0;
+        bitmask_type    : string;
+        bitmask_current := 0;
+        bitmask_members : [..]Video_Struct_Member;
+
+        for m : s.members {
+            if m.bitmask > 0 {
+                if bitmask_target == 0 {
+                    bitmask_target = get_jai_type_size(m.type);
+                    bitmask_type = m.type;
+                }
+                bitmask_current += m.bitmask;
+
+                array_add(*bitmask_members, m);
+
+                if bitmask_current == bitmask_target {
+                    append(sb, "    __bitmask: ");
+                    append(sb, bitmask_type);
+                    append(sb, ";\n");
+                    append(sb, "    /*\n");
+                    for bm : bitmask_members {
+                        output_struct_member(bm, sb);
+                    }
+                    append(sb, "    */\n");
+                    bitmask_target = 0;
+                    bitmask_type = "";
+                    bitmask_current = 0;
+                    array_reset(*bitmask_members);
+                }
+                assert(bitmask_target == 0 || bitmask_current < bitmask_target);
+            } else {
+                output_struct_member(m, sb);
+            }
+        }
+
+        // In video.xml, struct bitmask maynot fillup all the bits
+        if bitmask_members.count > 0 {
+            append(sb, "    __bitmask: ");
+            append(sb, bitmask_type);
+            append(sb, ";\n");
+            append(sb, "/*\n");
+            for bm : bitmask_members {
+                output_struct_member(bm, sb);
+            }
+            append(sb, "*/\n");
+            bitmask_target = 0;
+            bitmask_type = "";
+            bitmask_current = 0;
+            array_reset(*bitmask_members);
+        }
+
+        append(sb, "}\n\n");
+    }
+}
+
+output_enums :: (sb: *String_Builder) {
+    for e : video_enums {
+        append(sb, e.name);
+        append(sb, " :: enum u32 {\n");
+        for m : e.members {
+            if m.name.count > 0 {
+                append(sb, "    ");
+                append(sb, m.name);
+                append(sb, " :: ");
+                if m.alias.count > 0 {
+                    append(sb, m.alias);
+                } else {
+                    append(sb, m.value);
+                }
+                append(sb, ";");
+                if m.comment.count > 0 {
+                    append(sb, " /* ");
+                    append(sb, m.comment);
+                    append(sb, " */");
+                }
+            } else {
+                if m.comment.count > 0 {
+                    append(sb, "/*\n");
+                    append(sb, m.comment);
+                    append(sb, "\n*/");
+                }
+            }
+            append(sb, "\n");
+        }
+        append(sb, "}\n");
     }
 }
 

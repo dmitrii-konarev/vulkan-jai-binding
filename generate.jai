@@ -320,12 +320,13 @@ handle_struct :: (node: Node) {
         // struct node is member.
         for member_node : node.children {
             // This check is redundant.
+            vk_member : VK_Structure_Member;
+
             if member_node.tag_name == "member" {
                 if is_vulkansc(member_node) {
                     continue;
                 }
 
-                vk_member : VK_Structure_Member;
 
                 is_square_bracket_begin := false;
                 is_square_bracket_done := false;
@@ -815,34 +816,36 @@ output_types :: () {
 
 
 output_structure_member :: (member: VK_Structure_Member, sb: *String_Builder) {
-    append(sb, "    ");
-    // For whatever reason, the struct VkScreenSurfaceCreateInfoQNX
-    // decide to use context as its member's name, which collide with
-    // Jai keyword...
-    //
-    // Hard code to prevent it.
-    output_member_name := member.name;
-    if member.name == "context" {
-        output_member_name = "ctx";
+    if member.name.count > 0 {
+        append(sb, "    ");
+        // For whatever reason, the struct VkScreenSurfaceCreateInfoQNX
+        // decide to use context as its member's name, which collide with
+        // Jai keyword...
+        //
+        // Hard code to prevent it.
+        output_member_name := member.name;
+        if member.name == "context" {
+            output_member_name = "ctx";
+        }
+        append(sb, output_member_name);
+        append(sb, ": ");
+        repeat_string("*", member.number_of_pointer, sb);
+        append(sb, member.array_prefix);
+        append(sb, member.type);
+        append(sb, ";");
+        if (member.comment.count > 0) {
+            append(sb, " /* ");
+            append(sb, member.comment);
+            append(sb, " */");
+        }
+    } else {
+        if member.comment.count > 0 {
+            append(sb, "/*\n");
+            append(sb, member.comment);
+            append(sb, "\n*/");
+        }
     }
-    append(sb, output_member_name);
-    append(sb, ": ");
-    n := member.number_of_pointer;
-
-    while n > 0 {
-        append(sb, "*");
-        n -= 1;
-    }
-
-    append(sb, member.array_prefix);
-    append(sb, member.type);
-    append(sb, ";");
-    if (member.comment.count > 0) {
-        append(sb, " /* ");
-        append(sb, member.comment);
-        append(sb, " */");
-    }
-    if (member.bitmask > 0) {
+    if member.bitmask > 0 {
         append(sb, sprint(" /* % bits */", member.bitmask));
     }
 
@@ -1406,6 +1409,7 @@ VkDeviceAddress   :: u64;
 #load "enums.jai";
 #load "unions.jai";
 #load "function_pointers.jai";
+#load "video.jai";
 DONE
 
 MODULE_DYNAMIC_STRING :: #string DONE
