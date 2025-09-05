@@ -863,6 +863,7 @@ output_structures :: () {
             append(*sb, ";\n");
         } else {
             append(*sb, "struct {\n");
+            bitmask_counter := 0;
             bitmask_target := 0;
             bitmask_type : string;
             bitmask_current := 0;
@@ -880,7 +881,7 @@ output_structures :: () {
                     array_add(*bitmask_members, member);
 
                     if bitmask_current == bitmask_target {
-                        append(*sb, "    __bitmask: ");
+                        append(*sb, sprint("    __bitmask%: ", bitmask_counter));
                         append(*sb, bitmask_type);
                         append(*sb, ";\n");
                         append(*sb, "    /*\n");
@@ -892,6 +893,7 @@ output_structures :: () {
                         bitmask_type = "";
                         bitmask_current = 0;
                         array_reset(*bitmask_members);
+                        bitmask_counter += 1;
                     }
                     assert(bitmask_target == 0 || bitmask_current < bitmask_target);
                 } else {
