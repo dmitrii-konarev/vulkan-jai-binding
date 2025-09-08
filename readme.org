@@ -9,6 +9,10 @@ This has no relation to osor_io's Vulkan jai binding, [[https://github.com/osor-
 The primary reason for me to write this binding is because the above
 binding does not compile anymore.
 
+I have generated a set of binding code in the repo. I don't recommend
+directly using them. They are just for reference. You should generate
+your own using the following instructions.
+
 * Usage
 Obtain a ~vk.xml~. I recommend to get it from your installation of
 Vulkan SDK, if you are on a mac and using homebrew, the binding is
