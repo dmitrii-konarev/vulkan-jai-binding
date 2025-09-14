@@ -10583,24 +10583,6 @@ VkPhysicalDeviceVertexAttributeRobustnessFeaturesEXT :: struct {
     vertexAttributeRobustness: VkBool32;
 }
 
-VkPhysicalDeviceDenseGeometryFormatFeaturesAMDX :: struct {
-    sType: VkStructureType = .PHYSICAL_DEVICE_DENSE_GEOMETRY_FORMAT_FEATURES_AMDX;
-    pNext: *void;
-    denseGeometryFormat: VkBool32;
-}
-
-VkAccelerationStructureDenseGeometryFormatTrianglesDataAMDX :: struct {
-    sType: VkStructureType = .ACCELERATION_STRUCTURE_DENSE_GEOMETRY_FORMAT_TRIANGLES_DATA_AMDX;
-    pNext: *void;
-    compressedData: VkDeviceOrHostAddressConstKHR;
-    dataSize: VkDeviceSize;
-    numTriangles: u32;
-    numVertices: u32;
-    maxPrimitiveIndex: u32;
-    maxGeometryIndex: u32;
-    format: VkCompressedTriangleFormatAMDX;
-}
-
 VkPhysicalDeviceDepthClampZeroOneFeaturesKHR :: struct {
     sType: VkStructureType = .PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_KHR;
     pNext: *void;
@@ -11141,11 +11123,5 @@ VkPhysicalDevicePipelineCacheIncrementalModeFeaturesSEC :: struct {
     sType: VkStructureType = .PHYSICAL_DEVICE_PIPELINE_CACHE_INCREMENTAL_MODE_FEATURES_SEC;
     pNext: *void;
     pipelineCacheIncrementalMode: VkBool32;
-}
-
-VkPhysicalDeviceShaderUntypedPointersFeaturesKHR :: struct {
-    sType: VkStructureType = .PHYSICAL_DEVICE_SHADER_UNTYPED_POINTERS_FEATURES_KHR;
-    pNext: *void;
-    shaderUntypedPointers: VkBool32;
 }
 

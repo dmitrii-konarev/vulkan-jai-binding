@@ -1726,7 +1726,6 @@ VkStructureType :: enum u32 {
     PIPELINE_COLOR_WRITE_CREATE_INFO_EXT                                  :: 1000381001;
     PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT               :: 1000382000;
     PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR                :: 1000386000;
-    PHYSICAL_DEVICE_SHADER_UNTYPED_POINTERS_FEATURES_KHR                  :: 1000387000;
     PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_EXT                    :: PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES;
     QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_EXT                           :: QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES;
     PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT                       :: 1000391000;
@@ -1859,8 +1858,6 @@ VkStructureType :: enum u32 {
     PHYSICAL_DEVICE_ANTI_LAG_FEATURES_AMD                                 :: 1000476000;
     ANTI_LAG_DATA_AMD                                                     :: 1000476001;
     ANTI_LAG_PRESENTATION_INFO_AMD                                        :: 1000476002;
-    PHYSICAL_DEVICE_DENSE_GEOMETRY_FORMAT_FEATURES_AMDX                   :: 1000478000;
-    ACCELERATION_STRUCTURE_DENSE_GEOMETRY_FORMAT_TRIANGLES_DATA_AMDX      :: 1000478001;
     SURFACE_CAPABILITIES_PRESENT_ID_2_KHR                                 :: 1000479000;
     PRESENT_ID_2_KHR                                                      :: 1000479001;
     PHYSICAL_DEVICE_PRESENT_ID_2_FEATURES_KHR                             :: 1000479002;
@@ -2153,13 +2150,13 @@ Return codes (positive values)
     ERROR_FORMAT_NOT_SUPPORTED                         :: -11; /* Requested format is not supported on this device */
     ERROR_FRAGMENTED_POOL                              :: -12; /* A requested pool allocation has failed due to fragmentation of the pool's memory */
     ERROR_UNKNOWN                                      :: -13; /* An unknown error has occurred, due to an implementation or application bug */
-    ERROR_VALIDATION_FAILED                            :: -1000011001;
     ERROR_OUT_OF_POOL_MEMORY                           :: -1000069000;
     ERROR_INVALID_EXTERNAL_HANDLE                      :: -1000072003;
     ERROR_FRAGMENTATION                                :: -1000161000;
     ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS               :: -1000257000;
     PIPELINE_COMPILE_REQUIRED                          :: 1000297000;
     ERROR_NOT_PERMITTED                                :: -1000174001;
+    ERROR_VALIDATION_FAILED                            :: -1000011001;
     ERROR_INVALID_PIPELINE_CACHE_DATA                  :: -1000298000;
     ERROR_NO_PIPELINE_MATCH                            :: -1000298001;
     ERROR_SURFACE_LOST_KHR                             :: -1000000000;
@@ -2167,7 +2164,7 @@ Return codes (positive values)
     SUBOPTIMAL_KHR                                     :: 1000001003;
     ERROR_OUT_OF_DATE_KHR                              :: -1000001004;
     ERROR_INCOMPATIBLE_DISPLAY_KHR                     :: -1000003001;
-    ERROR_VALIDATION_FAILED_EXT                        :: ERROR_VALIDATION_FAILED;
+    ERROR_VALIDATION_FAILED_EXT                        :: -1000011001;
     ERROR_INVALID_SHADER_NV                            :: -1000012000;
     ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR                :: -1000023000;
     ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR       :: -1000023001;
@@ -2567,7 +2564,7 @@ VkBufferUsageFlags2 :: enum_flags u64 {
     PUSH_DESCRIPTORS_DESCRIPTOR_BUFFER_EXT           :: 1 << 26;
     MICROMAP_BUILD_INPUT_READ_ONLY_EXT               :: 1 << 23;
     MICROMAP_STORAGE_EXT                             :: 1 << 24;
-    COMPRESSED_DATA_DGF1_AMDX                        :: 1 << 33;
+    RESERVED_33_AMD                                  :: 1 << 33;
     DATA_GRAPH_FOREIGN_DESCRIPTOR_ARM                :: 1 << 29;
     TILE_MEMORY_QCOM                                 :: 1 << 27;
     RESERVED_32_NV                                   :: 1 << 32;
@@ -2797,7 +2794,6 @@ VkPipelineCreateFlags2 :: enum_flags u64 {
     RESERVED_41_KHR                                       :: 1 << 41;
     RESERVED_42_KHR                                       :: 1 << 42;
     RESERVED_43_EXT                                       :: 1 << 43;
-    RESERVED_45_EXT                                       :: 1 << 45;
 }
 
 VkPipelineShaderStageCreateFlagBits :: VkPipelineShaderStageCreateFlags;
@@ -3857,7 +3853,6 @@ VkBuildAccelerationStructureFlagsKHR :: enum_flags u32 {
     ALLOW_OPACITY_MICROMAP_DATA_UPDATE_EXT :: 1 << 8;
     ALLOW_DISPLACEMENT_MICROMAP_UPDATE_NV  :: 1 << 9;
     ALLOW_DATA_ACCESS                      :: 1 << 11;
-    ALLOW_CLUSTER_OPACITY_MICROMAPS_NV     :: 1 << 12;
 }
 
 VkAccelerationStructureCreateFlagBitsKHR :: VkAccelerationStructureCreateFlagsKHR;
@@ -3890,14 +3885,13 @@ VkAccelerationStructureTypeKHR :: enum u32 {
 }
 
 VkGeometryTypeKHR :: enum u32 {
-    TRIANGLES                            :: 0;
-    AABBS                                :: 1;
-    INSTANCES                            :: 2;
-    TRIANGLES_NV                         :: TRIANGLES;
-    AABBS_NV                             :: AABBS;
-    SPHERES_NV                           :: 1000429004;
-    LINEAR_SWEPT_SPHERES_NV              :: 1000429005;
-    DENSE_GEOMETRY_FORMAT_TRIANGLES_AMDX :: 1000478000;
+    TRIANGLES               :: 0;
+    AABBS                   :: 1;
+    INSTANCES               :: 2;
+    TRIANGLES_NV            :: TRIANGLES;
+    AABBS_NV                :: AABBS;
+    SPHERES_NV              :: 1000429004;
+    LINEAR_SWEPT_SPHERES_NV :: 1000429005;
 }
 
 VkAccelerationStructureMemoryRequirementsTypeNV :: enum u32 {
@@ -4774,7 +4768,6 @@ bitpos 13 is an extension interaction with VK_EXT_filter_cubic"
     OPTICAL_FLOW_VECTOR_NV                                                      :: 1 << 41;
     OPTICAL_FLOW_COST_NV                                                        :: 1 << 42;
     TENSOR_DATA_GRAPH_ARM                                                       :: 1 << 48;
-    RESERVED_59_NV                                                              :: 1 << 59;
     VIDEO_ENCODE_QUANTIZATION_DELTA_MAP_KHR                                     :: 1 << 49;
     VIDEO_ENCODE_EMPHASIS_MAP_KHR                                               :: 1 << 50;
     RESERVED_52_KHR                                                             :: 1 << 52;
@@ -5260,10 +5253,6 @@ VkMemoryUnmapFlags :: enum_flags u32 {
     RESERVE_EXT :: 1 << 0;
 }
 
-VkCompressedTriangleFormatAMDX :: enum u32 {
-    DGF1 :: 0;
-}
-
 VkWaylandSurfaceCreateFlagBitsKHR :: VkWaylandSurfaceCreateFlagsKHR;
 VkWaylandSurfaceCreateFlagsKHR :: enum_flags u32 {
     DISABLE_COLOR_MANAGEMENT :: 1 << 0;
@@ -5296,7 +5285,6 @@ VkTensorCreateFlagBitsARM :: VkTensorCreateFlagsARM;
 VkTensorCreateFlagsARM :: enum_flags u64 {
     MUTABLE_FORMAT                   :: 1 << 0;
     PROTECTED                        :: 1 << 1;
-    RESERVED_3                       :: 1 << 3;
     DESCRIPTOR_BUFFER_CAPTURE_REPLAY :: 1 << 2;
 }
 
