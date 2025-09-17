@@ -137,6 +137,7 @@ VK_Constant :: struct {
 VK_Union_Member :: struct {
     name              : string;
     number_of_pointer : int;
+    array_prefix      : string;
     type              : string;
 }
 
@@ -414,6 +415,8 @@ handle_union :: (parent: Node) {
             } else {
                 if begins_with(member_child.raw_string, "*") {
                     m.number_of_pointer = count_pointer(member_child.raw_string);
+                } else if begins_with(member_child.raw_string, "[") && ends_with(member_child.raw_string, "]") {
+                    m.array_prefix = member_child.raw_string;
                 }
             }
         }
@@ -1158,6 +1161,7 @@ output_unions :: () {
             append(*sb, m.name);
             append(*sb, ": ");
             repeat_string("*", m.number_of_pointer, *sb);
+            append(*sb, m.array_prefix);
             append(*sb, m.type);
             append(*sb, ";\n");
 

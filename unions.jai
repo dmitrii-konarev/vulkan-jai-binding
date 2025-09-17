@@ -1,7 +1,7 @@
 VkClearColorValue :: union {
-    float32_: float;
-    int32_: s32;
-    uint32_: u32;
+    float32_: [4]float;
+    int32_: [4]s32;
+    uint32_: [4]u32;
 }
 VkClearValue :: union {
     color: VkClearColorValue;
