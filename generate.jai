@@ -788,7 +788,7 @@ is_vulkansc :: (node: Node) -> bool {
     return false;
 }
 
-DEFAULT_PARAMETER_TRIM :: "*,(); \n";
+DEFAULT_PARAMETER_TRIM :: "*,(); \n\r";
 
 clean_parameter_name :: (s: string) -> string {
     i := find_index_from_left(s, "const");
