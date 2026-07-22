@@ -2,16 +2,37 @@
 
 This is a Vulkan binding generated from vk.xml. This generator is
 written from scratch, including the xml parser. Tested on Vulkan
-1.4.335 and jai version beta 0.2.026.
+1.4.350 and jai version beta 0.2.030.
 
 This has no relation to osor_io's Vulkan jai binding, [[https://github.com/osor-io/osor_vulkan][osor_vulkan]].
 
 The primary reason for me to write this binding is because the above
 binding does not compile anymore.
 
-I have generated a set of binding code in the repo. I don't recommend
-directly using them. They are just for reference. You should generate
-your own using the following instructions.
+There are generated bindings in this repo, including the single file
+~vulkan.jai~ which does nothing if you are using multiple file
+approach. I usually don't recommend people to use the generated
+binding directly. Generating your own with the latest registry is the
+way to go.
+
+I realize that some developer prefers a single file version instead of
+multiple files. The primary reason for the multiple file approach is
+because Jails (Jai LSP) constantly breaks on very large
+file. Regarding this, I would provide a switch for people to try
+between single file and multiple file performance. But from a user
+point of view, they does not have any difference.
+
+* Single File Switch
+At the top of ~generate_vulkan.jai~, there is a SINGLE_FILE constant,
+change it to true to generate a single file ~vulkan.jai~. ~module.jai~
+would automatically generate the correct ~#load~.
+
+#+begin_src jai
+  SINGLE_FILE    :: true;
+#+end_src
+
+It cannot be true single file if we want to maintain a directory for
+Vulkan module.
 
 * Usage
 Obtain a ~vk.xml~. I recommend to get it from your installation of

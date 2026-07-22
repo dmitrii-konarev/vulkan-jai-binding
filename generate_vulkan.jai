@@ -3,6 +3,8 @@ VK_XML_PATH :: "vk.xml";
 // Enabling dynamic loader will generate function pointers to all the
 // functions and a some dynamic loader helper functions.
 DYNAMIC_LOADER :: true;
+SINGLE_FILE    :: false;
+single_file_sb: String_Builder;
 
 VK :: struct {
     Type :: struct {
@@ -142,6 +144,10 @@ generate :: () {
     output_enumeration_wrapper();
 
     output_module();
+
+    #if SINGLE_FILE {
+        write_entire_file("vulkan.jai", *single_file_sb);
+    }
 
     end_time := current_time_monotonic();
     log("Finished writing to file in % seconds", to_float64_seconds(end_time - generation_time));
@@ -836,15 +842,18 @@ clean_parameter_name :: (s: string) -> string {
 }
 
 output_types :: () {
+    // The #scope_export things are put at the end because it breaks
+    // the scope in single file output.
     sb: String_Builder;
-    sb_file: String_Builder;
-    append(*sb_file, "#scope_file\n");
+    append(*sb, "#scope_export\n");
+    sb0: String_Builder;
+    append(*sb0, "#scope_file\n");
 
     for t : vk.types {
         using t;
         if type == "handle" {
-            append(*sb_file, name);
-            append(*sb_file, "_T :: struct {}\n");
+            append(*sb0, name);
+            append(*sb0, "_T :: struct {}\n");
             append(*sb, name);
             append(*sb, " :: *");
             append(*sb, name);
@@ -869,9 +878,13 @@ output_types :: () {
         }
     }
 
-    append_and_steal_buffers(*sb, *sb_file);
+    append_and_steal_buffers(*sb0, *sb);
 
-    write_entire_file("types.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb0);
+    } else {
+        write_entire_file("types.jai", *sb0);
+    }
 }
 
 
@@ -977,7 +990,11 @@ output_structures :: () {
         append(*sb, "\n");
     }
 
-    write_entire_file("structures.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("structures.jai", *sb);
+    }
 }
 
 output_function_param :: (param: VK.Function_Param, sb: *String_Builder) {
@@ -1034,7 +1051,11 @@ output_functions :: () {
         }
     }
 
-    write_entire_file("functions.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("functions.jai", *sb);
+    }
 }
 
 output_function_pointers :: () {
@@ -1058,7 +1079,11 @@ output_function_pointers :: () {
         append(*sb, " #c_call;\n");
     }
 
-    write_entire_file("function_pointers.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("function_pointers.jai", *sb);
+    }
 }
 
 // Make sure to call this function at the end because it modifies the
@@ -1180,7 +1205,11 @@ output_enums :: () {
         }
     }
 
-    write_entire_file("enums.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("enums.jai", *sb);
+    }
 }
 
 output_unions :: () {
@@ -1201,7 +1230,11 @@ output_unions :: () {
         append(*sb, "}\n");
     }
 
-    write_entire_file("unions.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("unions.jai", *sb);
+    }
 }
 
 output_constants :: () {
@@ -1226,7 +1259,11 @@ output_constants :: () {
         append(*sb, ";\n");
     }
 
-    write_entire_file("constants.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("constants.jai", *sb);
+    }
 }
 
 output_dynamic_functions :: () {
@@ -1397,7 +1434,12 @@ make_dynamic_device_function_maybe :: (dynamic_name: string, real_name: string) 
     append_and_steal_buffers(*sb, *sb_load_instance_functions);
     append_and_steal_buffers(*sb, *sb_load_device_functions);
     append_and_steal_buffers(*sb, *sb1);
-    write_entire_file("functions.jai", *sb);
+
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("functions.jai", *sb);
+    }
 }
 
 is_upper :: (byte: u8) -> bool {
@@ -1546,6 +1588,9 @@ VkFlags64         :: u64;
 VkDeviceSize      :: u64;
 VkDeviceAddress   :: u64;
 
+DONE
+
+MODULE_MULTIPLE_FILE_FOOTER :: #string DONE
 #load "constants.jai";
 #load "types.jai";
 #load "structures.jai";
@@ -1555,6 +1600,12 @@ VkDeviceAddress   :: u64;
 #load "video.jai";
 #load "enumeration_wrapper.jai";
 #load "functions.jai";
+#scope_file
+#import "Basic";
+DONE
+
+MODULE_SINGLE_FILE_FOOTER :: #string DONE
+#load "vulkan.jai";
 #scope_file
 #import "Basic";
 DONE
@@ -1623,6 +1674,11 @@ output_module :: () {
     append(*sb, MODULE_EXTERNAL_TYPE);
 
     append(*sb, MODULE_COMMON_STRING);
+    #if SINGLE_FILE {
+        append(*sb, MODULE_SINGLE_FILE_FOOTER);
+    } else {
+        append(*sb, MODULE_MULTIPLE_FILE_FOOTER);
+    }
 
     write_entire_file("module.jai", *sb);
 }
@@ -1710,7 +1766,11 @@ output_enumeration_wrapper :: () {
         append(*sb, "data;\n}\n\n");
     }
 
-    write_entire_file("enumeration_wrapper.jai", *sb);
+    #if SINGLE_FILE {
+        append_and_steal_buffers(*single_file_sb, *sb);
+    } else {
+        write_entire_file("enumeration_wrapper.jai", *sb);
+    }
 }
 
 #import "Basic";
