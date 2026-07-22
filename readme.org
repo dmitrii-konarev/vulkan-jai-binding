@@ -121,6 +121,16 @@ jai/examples/VR/modules.)
   }
 #+end_src
 
+One smart thing the dynamic loader does is trying to load extended
+function as much as possible.
+
+For example, ~vkQueueSubmit2~ is a Vulkan 1.3 function. If you are
+using Vulkan 1.2 with extensions, the function name would be
+~vkQueueSubmit2KHR~. But for convenience, the loader would also load
+~vkQueueSubmit2KHR~ into ~vkQueueSubmit2~. They are interchangable in
+this loader, which solves a big pain point I faced back when I was
+using volk in C.
+
 * Enumeration wrapper
 Inspired by the stock Vulkan module, I ported the enumeration wrapper
 into this library. For anything that you normally need three steps to
